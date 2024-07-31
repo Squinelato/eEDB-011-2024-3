@@ -1,0 +1,795 @@
+{
+	"dag": {
+		"node-1722386380288": {
+			"classification": "Transform",
+			"type": "ApplyMapping",
+			"name": "Schema - Banks",
+			"inputs": [
+				"node-1722388002707"
+			],
+			"mapping": [
+				{
+					"toKey": "Segmento",
+					"fromPath": [
+						"Segmento"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "CNPJ",
+					"fromPath": [
+						"CNPJ"
+					],
+					"toType": "long",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Nome",
+					"fromPath": [
+						"Nome"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				}
+			],
+			"generatedNodeName": "SchemaBanks_node1722386380288",
+			"codeGenVersion": 2
+		},
+		"node-1722386866004": {
+			"classification": "DataSource",
+			"type": "S3",
+			"name": "Employees",
+			"inputs": [],
+			"isCatalog": false,
+			"recurse": true,
+			"paths": [
+				"s3://eedb-011/Dados/Empregados/glassdoor_consolidado_join_match_v2.csv"
+			],
+			"additionalOptions": {
+				"enableSamplePath": true,
+				"samplePath": "s3://eedb-011/Dados/Empregados/glassdoor_consolidado_join_match_v2.csv"
+			},
+			"inferSchemaChanged": false,
+			"format": "csv",
+			"generatedNodeName": "Employees_node1722386866004",
+			"codeGenVersion": 2,
+			"separator": "|",
+			"quoteChar": "\"",
+			"withHeader": true,
+			"escaper": "",
+			"outputSchemas": [
+				[
+					{
+						"key": "employer_name",
+						"fullPath": [
+							"employer_name"
+						],
+						"type": "string"
+					},
+					{
+						"key": "reviews_count",
+						"fullPath": [
+							"reviews_count"
+						],
+						"type": "string"
+					},
+					{
+						"key": "culture_count",
+						"fullPath": [
+							"culture_count"
+						],
+						"type": "string"
+					},
+					{
+						"key": "salaries_count",
+						"fullPath": [
+							"salaries_count"
+						],
+						"type": "string"
+					},
+					{
+						"key": "benefits_count",
+						"fullPath": [
+							"benefits_count"
+						],
+						"type": "string"
+					},
+					{
+						"key": "employer-website",
+						"fullPath": [
+							"employer-website"
+						],
+						"type": "string"
+					},
+					{
+						"key": "employer-headquarters",
+						"fullPath": [
+							"employer-headquarters"
+						],
+						"type": "string"
+					},
+					{
+						"key": "employer-founded",
+						"fullPath": [
+							"employer-founded"
+						],
+						"type": "string"
+					},
+					{
+						"key": "employer-industry",
+						"fullPath": [
+							"employer-industry"
+						],
+						"type": "string"
+					},
+					{
+						"key": "employer-revenue",
+						"fullPath": [
+							"employer-revenue"
+						],
+						"type": "string"
+					},
+					{
+						"key": "url",
+						"fullPath": [
+							"url"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Geral",
+						"fullPath": [
+							"Geral"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Cultura e valores",
+						"fullPath": [
+							"Cultura e valores"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Diversidade e inclusão",
+						"fullPath": [
+							"Diversidade e inclusão"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Qualidade de vida",
+						"fullPath": [
+							"Qualidade de vida"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Alta liderança",
+						"fullPath": [
+							"Alta liderança"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Remuneração e benefícios",
+						"fullPath": [
+							"Remuneração e benefícios"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Oportunidades de carreira",
+						"fullPath": [
+							"Oportunidades de carreira"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Recomendam para outras pessoas(%)",
+						"fullPath": [
+							"Recomendam para outras pessoas(%)"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Perspectiva positiva da empresa(%)",
+						"fullPath": [
+							"Perspectiva positiva da empresa(%)"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Segmento",
+						"fullPath": [
+							"Segmento"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Nome",
+						"fullPath": [
+							"Nome"
+						],
+						"type": "string"
+					},
+					{
+						"key": "match_percent",
+						"fullPath": [
+							"match_percent"
+						],
+						"type": "string"
+					}
+				]
+			]
+		},
+		"node-1722386924918": {
+			"classification": "Transform",
+			"type": "ApplyMapping",
+			"name": "Schema - Employees",
+			"inputs": [
+				"node-1722386866004"
+			],
+			"mapping": [
+				{
+					"toKey": "employer_name",
+					"fromPath": [
+						"employer_name"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "reviews_count",
+					"fromPath": [
+						"reviews_count"
+					],
+					"toType": "long",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "culture_count",
+					"fromPath": [
+						"culture_count"
+					],
+					"toType": "long",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "salaries_count",
+					"fromPath": [
+						"salaries_count"
+					],
+					"toType": "long",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "benefits_count",
+					"fromPath": [
+						"benefits_count"
+					],
+					"toType": "long",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "employer-website",
+					"fromPath": [
+						"employer-website"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "employer-headquarters",
+					"fromPath": [
+						"employer-headquarters"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "employer-founded",
+					"fromPath": [
+						"employer-founded"
+					],
+					"toType": "int",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "employer-industry",
+					"fromPath": [
+						"employer-industry"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "employer-revenue",
+					"fromPath": [
+						"employer-revenue"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "url",
+					"fromPath": [
+						"url"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Geral",
+					"fromPath": [
+						"Geral"
+					],
+					"toType": "float",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Cultura e valores",
+					"fromPath": [
+						"Cultura e valores"
+					],
+					"toType": "float",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Diversidade e inclusão",
+					"fromPath": [
+						"Diversidade e inclusão"
+					],
+					"toType": "float",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Qualidade de vida",
+					"fromPath": [
+						"Qualidade de vida"
+					],
+					"toType": "float",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Alta liderança",
+					"fromPath": [
+						"Alta liderança"
+					],
+					"toType": "float",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Remuneração e benefícios",
+					"fromPath": [
+						"Remuneração e benefícios"
+					],
+					"toType": "float",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Oportunidades de carreira",
+					"fromPath": [
+						"Oportunidades de carreira"
+					],
+					"toType": "float",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Recomendam para outras pessoas(%)",
+					"fromPath": [
+						"Recomendam para outras pessoas(%)"
+					],
+					"toType": "float",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Perspectiva positiva da empresa(%)",
+					"fromPath": [
+						"Perspectiva positiva da empresa(%)"
+					],
+					"toType": "float",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Segmento",
+					"fromPath": [
+						"Segmento"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Nome",
+					"fromPath": [
+						"Nome"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "match_percent",
+					"fromPath": [
+						"match_percent"
+					],
+					"toType": "int",
+					"fromType": "string",
+					"dropped": false
+				}
+			],
+			"generatedNodeName": "SchemaEmployees_node1722386924918",
+			"codeGenVersion": 2
+		},
+		"node-1722387646432": {
+			"classification": "DataSource",
+			"type": "S3",
+			"name": "Claims",
+			"inputs": [],
+			"isCatalog": false,
+			"recurse": true,
+			"paths": [
+				"s3://eedb-011/Dados/Reclamações/2021_tri_02.csv"
+			],
+			"additionalOptions": {
+				"enableSamplePath": true,
+				"samplePath": "s3://eedb-011/Dados/Reclamações/2021_tri_02.csv"
+			},
+			"inferSchemaChanged": false,
+			"format": "csv",
+			"generatedNodeName": "Claims_node1722387646432",
+			"codeGenVersion": 2,
+			"separator": ";",
+			"quoteChar": "\"",
+			"withHeader": true,
+			"escaper": "",
+			"outputSchemas": [
+				[
+					{
+						"key": "Ano",
+						"fullPath": [
+							"Ano"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Trimestre",
+						"fullPath": [
+							"Trimestre"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Categoria",
+						"fullPath": [
+							"Categoria"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Tipo",
+						"fullPath": [
+							"Tipo"
+						],
+						"type": "string"
+					},
+					{
+						"key": "CNPJ IF",
+						"fullPath": [
+							"CNPJ IF"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Institui��o financeira",
+						"fullPath": [
+							"Institui��o financeira"
+						],
+						"type": "string"
+					},
+					{
+						"key": "�ndice",
+						"fullPath": [
+							"�ndice"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Quantidade de reclama��es reguladas procedentes",
+						"fullPath": [
+							"Quantidade de reclama��es reguladas procedentes"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Quantidade de reclama��es reguladas - outras",
+						"fullPath": [
+							"Quantidade de reclama��es reguladas - outras"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Quantidade de reclama��es n�o reguladas",
+						"fullPath": [
+							"Quantidade de reclama��es n�o reguladas"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Quantidade total de reclama��es",
+						"fullPath": [
+							"Quantidade total de reclama��es"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Quantidade total de clientes � CCS e SCR",
+						"fullPath": [
+							"Quantidade total de clientes � CCS e SCR"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Quantidade de clientes � CCS",
+						"fullPath": [
+							"Quantidade de clientes � CCS"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Quantidade de clientes � SCR",
+						"fullPath": [
+							"Quantidade de clientes � SCR"
+						],
+						"type": "string"
+					}
+				]
+			]
+		},
+		"node-1722388002707": {
+			"classification": "DataSource",
+			"type": "S3",
+			"name": "Banks",
+			"inputs": [],
+			"isCatalog": false,
+			"recurse": true,
+			"paths": [
+				"s3://eedb-011/Dados/Bancos/EnquadramentoInicia_v2.tsv"
+			],
+			"additionalOptions": {
+				"enableSamplePath": true,
+				"samplePath": "s3://eedb-011/Dados/Bancos/EnquadramentoInicia_v2.tsv"
+			},
+			"inferSchemaChanged": false,
+			"format": "csv",
+			"generatedNodeName": "Banks_node1722388002707",
+			"codeGenVersion": 2,
+			"separator": "\t",
+			"quoteChar": "\"",
+			"withHeader": true,
+			"escaper": "",
+			"outputSchemas": [
+				[
+					{
+						"key": "Segmento",
+						"fullPath": [
+							"Segmento"
+						],
+						"type": "string"
+					},
+					{
+						"key": "CNPJ",
+						"fullPath": [
+							"CNPJ"
+						],
+						"type": "string"
+					},
+					{
+						"key": "Nome",
+						"fullPath": [
+							"Nome"
+						],
+						"type": "string"
+					}
+				]
+			]
+		},
+		"node-1722388090693": {
+			"classification": "Transform",
+			"type": "ApplyMapping",
+			"name": "Schema - Claims",
+			"inputs": [
+				"node-1722387646432"
+			],
+			"mapping": [
+				{
+					"toKey": "Ano",
+					"fromPath": [
+						"Ano"
+					],
+					"toType": "date",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Trimestre",
+					"fromPath": [
+						"Trimestre"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Categoria",
+					"fromPath": [
+						"Categoria"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Tipo",
+					"fromPath": [
+						"Tipo"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "CNPJ IF",
+					"fromPath": [
+						"CNPJ IF"
+					],
+					"toType": "int",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Instituição financeira",
+					"fromPath": [
+						"Institui��o financeira"
+					],
+					"toType": "string",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Índice",
+					"fromPath": [
+						"�ndice"
+					],
+					"toType": "int",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Quantidade de reclamações reguladas procedentes",
+					"fromPath": [
+						"Quantidade de reclama��es reguladas procedentes"
+					],
+					"toType": "int",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Quantidade de reclamações reguladas - outras",
+					"fromPath": [
+						"Quantidade de reclama��es reguladas - outras"
+					],
+					"toType": "int",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Quantidade de reclamações não reguladas",
+					"fromPath": [
+						"Quantidade de reclama��es n�o reguladas"
+					],
+					"toType": "int",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Quantidade total de reclamações",
+					"fromPath": [
+						"Quantidade total de reclama��es"
+					],
+					"toType": "int",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Quantidade total de clientes - CCS e SCR",
+					"fromPath": [
+						"Quantidade total de clientes � CCS e SCR"
+					],
+					"toType": "int",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Quantidade de clientes - CCS",
+					"fromPath": [
+						"Quantidade de clientes � CCS"
+					],
+					"toType": "int",
+					"fromType": "string",
+					"dropped": false
+				},
+				{
+					"toKey": "Quantidade de clientes - SCR",
+					"fromPath": [
+						"Quantidade de clientes � SCR"
+					],
+					"toType": "int",
+					"fromType": "string",
+					"dropped": false
+				}
+			],
+			"generatedNodeName": "SchemaClaims_node1722388090693",
+			"codeGenVersion": 2
+		}
+	},
+	"jobConfig": {
+		"command": "glueetl",
+		"description": "",
+		"role": "arn:aws:iam::389957581042:role/LabRole",
+		"scriptName": "Classical ETL.py",
+		"version": "4.0",
+		"language": "python-3",
+		"scriptLocation": "s3://aws-glue-assets-389957581042-us-east-1/scripts/",
+		"temporaryDirectory": "s3://aws-glue-assets-389957581042-us-east-1/temporary/",
+		"timeout": 2880,
+		"maxConcurrentRuns": 1,
+		"workerType": "G.1X",
+		"numberOfWorkers": 10,
+		"maxRetries": 0,
+		"metrics": true,
+		"observabilityMetrics": true,
+		"security": "none",
+		"bookmark": "job-bookmark-disable",
+		"logging": true,
+		"spark": true,
+		"sparkConfiguration": "standard",
+		"sparkPath": "s3://aws-glue-assets-389957581042-us-east-1/sparkHistoryLogs/",
+		"serverEncryption": false,
+		"glueHiveMetastore": true,
+		"etlAutoScaling": false,
+		"etlAutoTuning": false,
+		"jobParameters": [],
+		"tags": [],
+		"connectionsList": [],
+		"jobMode": "VISUAL_MODE",
+		"name": "Classical ETL",
+		"pythonPath": ""
+	},
+	"hasBeenSaved": false
+}
