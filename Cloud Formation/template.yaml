@@ -6,8 +6,8 @@ Parameters:
     Default: eEDB011
     Description: My database instance
     Type: String
-    MinLength: '1'
-    MaxLength: '63'
+    MinLength: 1
+    MaxLength: 63
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
     ConstraintDescription: >-
       Must begin with a letter and must not end with a hyphen or contain two
@@ -16,8 +16,8 @@ Parameters:
     Default: mydb
     Description: My database
     Type: String
-    MinLength: '1'
-    MaxLength: '64'
+    MinLength: 1
+    MaxLength: 64
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
     ConstraintDescription: Must begin with a letter and contain only alphanumeric characters.
   DBInstanceClass:
@@ -26,26 +26,26 @@ Parameters:
     Type: String
     ConstraintDescription: Must select a valid DB instance type.
   DBAllocatedStorage:
-    Default: '20'
+    Default: 20
     Description: The size of the database (GiB)
     Type: Number
-    MinValue: '20'
-    MaxValue: '65536'
+    MinValue: 20
+    MaxValue: 65536
     ConstraintDescription: must be between 20 and 65536 GiB.
   DBUsername:
-    NoEcho: 'true'
+    NoEcho: true
     Description: Username for MySQL database access
     Type: String
-    MinLength: '1'
-    MaxLength: '16'
+    MinLength: 1
+    MaxLength: 16
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
     ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
   DBPassword:
-    NoEcho: 'true'
+    NoEcho: true
     Description: Password MySQL database access
     Type: String
-    MinLength: '8'
-    MaxLength: '41'
+    MinLength: 8
+    MaxLength: 41
     AllowedPattern: '[a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 Resources:
@@ -58,5 +58,6 @@ Resources:
       AllocatedStorage: !Ref DBAllocatedStorage
       Engine: MySQL
       EngineVersion: "8.0.33"
+      MultiAZ: false
       MasterUsername: !Ref DBUsername
       MasterUserPassword: !Ref DBPassword
