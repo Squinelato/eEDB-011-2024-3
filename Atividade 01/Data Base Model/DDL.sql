@@ -19,7 +19,7 @@ USE `mydb` ;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `mydb`.`rwzd_bank` (
   `financial_institution` VARCHAR(256) NOT NULL,
-  `cnpj` INT NULL,
+  `cnpj` VARCHAR(20) NULL,
   `segment` VARCHAR(4) NULL,
   PRIMARY KEY (`financial_institution`))
 ENGINE = InnoDB;
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`rwzd_employee` (
   `benefits_count` INT NULL,
   `employer_website` VARCHAR(256) NULL,
   `employer_headquarters` VARCHAR(256) NULL,
-  `employer_founded` FLOAT NULL,
+  `employer_founded` VARCHAR(4) NULL,
   `employer_industry` VARCHAR(256) NULL,
   `employer_revenue` VARCHAR(256) NULL,
   `url` VARCHAR(256) NULL,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`rwzd_claim` (
   `categoty` VARCHAR(256) NULL,
   `type` VARCHAR(256) NULL,
   `cnpj` INT NULL,
-  `index` VARCHAR(45) NULL,
+  `index` FLOAT NULL,
   `number_of_regulated_complaints_received` INT NULL,
   `number_of_regulated_complaints_others` INT NULL,
   `number_of_unregulated_complaints` INT NULL,
