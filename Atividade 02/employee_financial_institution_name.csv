@@ -1,0 +1,33 @@
+financial_institution_name,count
+VOTORANTIM,2 -- (conglomerado) adicionado
+JP MORGAN CHASE,2  --(conglomerado) adicionado
+ALFA,1  -- (conglomerado) adicionado
+BNP PARIBAS,1 -- (conglomerado) adicionado
+BRADESCO,1 -- (conglomerado) adicionado
+BANCO DAYCOVAL S.A,1 -- (apenas DAYCOVAL)
+BANCO FIBRA S.A.,1 -- normal
+BTG PACTUAL,1 -- (conglomerado) adicionado
+ORIGINAL,1 -- (conglomerado) adicionado
+PAN,1 -- (conglomerado) adicionado
+PINE,1 -- (conglomerado) adicionado
+BANCO DO BRASIL,1 -- (está como BB)
+BANCO DO NORDESTE DO BRASIL S.A.,1 --normal
+BANCO TOKYO-MITSUBISHI BM S.A.,1 -- não existe
+BANRISUL,1 -- (conglomerado) adicionado
+BMG,1 -- (conglomerado) adicionado
+CAIXA ECONOMICA FEDERAL,1 -- "ECONÔMICA" + (conglomerado) adicionado
+CITIBANK,1 -- (conglomerado) adicionado
+DEUTSCHE,1 -- DEUTSCHE BANK S.A. - BANCO ALEMAO
+CREDIT SUISSE,1 -- (conglomerado) adicionado
+GOLDMAN SACHS,1 -- não existe
+ING,1 -- não existe
+ITAU,1 -- (conglomerado) adicionado
+BOFA MERRILL LYNCH,1 -- (conglomerado) adicionado
+MORGAN STANLEY,1 -- não existe
+SANTANDER,1  -- (conglomerado) adicionado
+SICREDI,1  -- (conglomerado) adicionado
+SOCIETE GENERALE,1  -- (conglomerado) adicionado
+APE POUPEX,1 -- nao existe
+CHINA CONSTRUCTION BANK (BRASIL) BANCO MULTIPLO S/,1 (BANCO DA CHINA BRASIL S.A. ?????)
+MERCEDES-BENZ,1   -- (conglomerado) adicionado
+BANCO SUMITOMO MITSUI BRASIL S.A.,1 -- BANCO SUMITOMO MITSUI BRASILEIRO S.A.
