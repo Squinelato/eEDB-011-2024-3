@@ -1,0 +1,159 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: 'Stack de recursos do grupo 2 da Especialização Engenharia de Dados e Big Data turma de 2024 para a aula de Ingestão de Dados'
+Parameters:
+  DBInstanceID:
+    Default: eEDB011
+    Description: My database instance
+    Type: String
+    MinLength: 1
+    MaxLength: 63
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: Must begin with a letter and must not end with a hyphen or contain two consecutive hyphens.
+  DBName:
+    Default: mydb
+    Description: My database
+    Type: String
+  SecretName:
+    Default: mydb-secret
+    Description: My secret
+    Type: String
+  BucketName:
+    Default: eedb-2024-g2
+    Description: My bucket
+    Type: String
+  ClusterName:
+    Default: mycluster
+    Description: My EMR cluster
+    Type: String
+  DBInstanceClass:
+    Default: db.t4g.micro
+    Description: DB instance class
+    Type: String
+  DBAllocatedStorage:
+    Default: 20
+    Description: The size of the database (GiB)
+    Type: Number
+    MinValue: 20
+    MaxValue: 65536
+    ConstraintDescription: must be between 20 and 65536 GiB.
+  DBUsername:
+    NoEcho: true
+    Description: Username for MySQL database access
+    Type: String
+    MinLength: 1
+    MaxLength: 16
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  DBPassword:
+    NoEcho: true
+    Description: Password MySQL database access
+    Type: String
+    MinLength: 8
+    MaxLength: 41
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${BucketName}-${AWS::AccountId}
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Projeto
+          Value: Ingestao de Dados
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Ref DBInstanceID
+      DBName: !Ref DBName
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: !Ref DBAllocatedStorage
+      Engine: MySQL
+      EngineVersion: "8.0.33"
+      MultiAZ: false
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      Tags:
+        - Key: Projeto
+          Value: Ingestao de Dados
+
+  SecretStore:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub ${SecretName}-${AWS::AccountId}
+      Description: 'Credentials for MySQL RDS instance'
+      SecretString:
+        Fn::Sub: |
+          {
+            "username": "${DBUsername}",
+            "password": "${DBPassword}",
+            "engine": "mysql",
+            "host": "${RDSInstance.Endpoint.Address}",
+            "port": "${RDSInstance.Endpoint.Port}",
+            "dbname": "mydb"
+          }
+      Tags:
+        - Key: Projeto
+          Value: Ingestao de Dados
+
+  EMRCluster:
+    Type: 'AWS::EMR::Cluster'
+    Properties:
+      Name: !Sub ${ClusterName}-${AWS::AccountId}
+      ReleaseLabel: 'emr-7.2.0'
+      Applications:
+        - Name: 'JupyterHub'
+        - Name: 'Hadoop'
+        - Name: 'Spark'
+        - Name: 'Hive'
+        - Name: 'Livy'
+      # Configurations:
+      #   - Classification: hive-site
+      #     Properties:
+      #       "hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"
+      #   - Classification: spark-hive-site
+      #     Properties:
+      #       "hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"
+      Instances:
+        MasterInstanceGroup:
+          InstanceType: 'm5.xlarge'
+          InstanceCount: 1
+          Market: 'ON_DEMAND'
+        CoreInstanceGroup:
+          InstanceType: 'm5.xlarge'
+          InstanceCount: 2
+          Market: 'ON_DEMAND'
+        TerminationProtected: false
+        KeepJobFlowAliveWhenNoSteps: true
+      JobFlowRole: !Sub arn:aws:iam::${AWS::AccountId}:instance-profile/EMR_EC2_DefaultRole
+      ServiceRole: !Sub arn:aws:iam::${AWS::AccountId}:role/EMR_DefaultRole
+      StepConcurrencyLevel: 3
+      LogUri: !Sub 's3://${BucketName}-${AWS::AccountId}/emr-logs/'
+      # BootstrapActions:
+      #   - Name: 'Install Python Modules'
+      #     ScriptBootstrapAction:
+      #       Path: !Sub 's3://${BucketName}-${AWS::AccountId}/artifacts/install-python-modules.sh'
+      Tags:
+        - Key: Projeto
+          Value: Ingestao de Dados
+
+  EMRClusterIDParameter:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: '/emr/cluster/id'
+      Type: 'String'
+      Value: !Ref EMRCluster
+      Tags:
+        Projeto: Ingestao de Dados
