@@ -2,9 +2,18 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Description: 'Stack de recursos do grupo 2 da Especialização Engenharia de Dados e Big Data turma de 2024 para a aula de Ingestão de Dados'
 Parameters:
+  Course:
+    Default: eedb
+    Type: String
+  Subject:
+    Default: 011-2024
+    Type: String
+  Group:
+    Default: g2
+    Type: String
   DBInstanceID:
-    Default: eEDB011
-    Description: My database instance
+    Default: eEDB
+    Description: Database instance
     Type: String
     MinLength: 1
     MaxLength: 63
@@ -12,19 +21,7 @@ Parameters:
     ConstraintDescription: Must begin with a letter and must not end with a hyphen or contain two consecutive hyphens.
   DBName:
     Default: mydb
-    Description: My database
-    Type: String
-  SecretName:
-    Default: mydb-secret
-    Description: My secret
-    Type: String
-  BucketName:
-    Default: eedb-2024-g2
-    Description: My bucket
-    Type: String
-  ClusterName:
-    Default: mycluster
-    Description: My EMR cluster
+    Description: Database name
     Type: String
   DBInstanceClass:
     Default: db.t4g.micro
@@ -53,12 +50,21 @@ Parameters:
     MaxLength: 41
     AllowedPattern: '[a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
+  SecretName:
+    Default: mydb-secret
+    Description: Secret name in AWS Secrets Manager
+    Type: String
 
 Resources:
-  Bucket:
+
+############################################################################################################
+########################################      BUCKETS      #################################################
+############################################################################################################
+
+  BucketArtifacts:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub ${BucketName}-${AWS::AccountId}
+      BucketName: !Sub ${Course}${Subject}-${Group}-${AWS::AccountId}-artifacts
       AccessControl: Private
       BucketEncryption:
         ServerSideEncryptionConfiguration:
@@ -73,10 +79,71 @@ Resources:
         - Key: Projeto
           Value: Ingestao de Dados
 
-  RDSInstance:
+  BucketIngestion:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${Course}${Subject}-${Group}-${AWS::AccountId}-ingestion
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+      Tags:
+        - Key: Projeto
+          Value: Ingestao de Dados
+
+  BucketRaw:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${Course}${Subject}-${Group}-${AWS::AccountId}-raw
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Projeto
+          Value: Ingestao de Dados
+
+  BucketTrusted:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${Course}${Subject}-${Group}-${AWS::AccountId}-trusted
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Projeto
+          Value: Ingestao de Dados
+
+############################################################################################################
+###########################################      RDS      ##################################################
+############################################################################################################
+
+  DBInstance:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: !Ref DBInstanceID
+      DBInstanceIdentifier: !Sub ${Course}${Subject}${Group}
       DBName: !Ref DBName
       DBInstanceClass: !Ref DBInstanceClass
       AllocatedStorage: !Ref DBAllocatedStorage
@@ -92,7 +159,7 @@ Resources:
   SecretStore:
     Type: 'AWS::SecretsManager::Secret'
     Properties:
-      Name: !Sub ${SecretName}-${AWS::AccountId}
+      Name: !Sub ${SecretName}
       Description: 'Credentials for MySQL RDS instance'
       SecretString:
         Fn::Sub: |
@@ -100,60 +167,253 @@ Resources:
             "username": "${DBUsername}",
             "password": "${DBPassword}",
             "engine": "mysql",
-            "host": "${RDSInstance.Endpoint.Address}",
-            "port": "${RDSInstance.Endpoint.Port}",
-            "dbname": "mydb"
+            "host": "${DBInstance.Endpoint.Address}",
+            "port": "${DBInstance.Endpoint.Port}",
+            "dbname": "eedb011"
           }
       Tags:
         - Key: Projeto
           Value: Ingestao de Dados
 
-  EMRCluster:
-    Type: 'AWS::EMR::Cluster'
+############################################################################################################
+###########################################      GLUE      #################################################
+############################################################################################################
+
+  GlueDatabaseRaw:
+    Type: 'AWS::Glue::Database'
     Properties:
-      Name: !Sub ${ClusterName}-${AWS::AccountId}
-      ReleaseLabel: 'emr-7.2.0'
-      Applications:
-        - Name: 'JupyterHub'
-        - Name: 'Hadoop'
-        - Name: 'Spark'
-        - Name: 'Hive'
-        - Name: 'Livy'
-      # Configurations:
-      #   - Classification: hive-site
-      #     Properties:
-      #       "hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"
-      #   - Classification: spark-hive-site
-      #     Properties:
-      #       "hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"
-      Instances:
-        MasterInstanceGroup:
-          InstanceType: 'm5.xlarge'
-          InstanceCount: 1
-          Market: 'ON_DEMAND'
-        CoreInstanceGroup:
-          InstanceType: 'm5.xlarge'
-          InstanceCount: 2
-          Market: 'ON_DEMAND'
-        TerminationProtected: false
-        KeepJobFlowAliveWhenNoSteps: true
-      JobFlowRole: !Sub arn:aws:iam::${AWS::AccountId}:instance-profile/EMR_EC2_DefaultRole
-      ServiceRole: !Sub arn:aws:iam::${AWS::AccountId}:role/EMR_DefaultRole
-      StepConcurrencyLevel: 3
-      LogUri: !Sub 's3://${BucketName}-${AWS::AccountId}/emr-logs/'
-      # BootstrapActions:
-      #   - Name: 'Install Python Modules'
-      #     ScriptBootstrapAction:
-      #       Path: !Sub 's3://${BucketName}-${AWS::AccountId}/artifacts/install-python-modules.sh'
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: 'rwzd'
+        Description: 'Database da camada Raw'
+
+  GlueDatabaseTrusted:
+    Type: 'AWS::Glue::Database'
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: 'trzd'
+        Description: 'Database da camada Trusted'
+
+  GlueJobRawBanks:
+    Type: 'AWS::Glue::Job'
+    Properties:
+      Name: !Sub ${Course}${Subject}-${Group}-banks-raw
+      Role: !GetAtt IAMRole.Arn
+      Command:
+        Name: 'glueetl'
+        ScriptLocation: !Sub 's3://${BucketArtifacts}/glue-scripts/banks-raw.py'
+        PythonVersion: '3'
+      DefaultArguments:
+        "--extra-py-files": !Sub 's3://${BucketArtifacts}/python-libs/unidecode.zip'
+        "--enable-glue-datacatalog": ""
+        "--enable-metrics": ""
+        "--file": ""
+        "--bucket": ""
+        "--raw_bucket": !Ref BucketRaw
+        "--database": "rwzd"
+        "--tablename": "banks"
+      MaxRetries: 0
+      GlueVersion: '4.0'
+      Timeout: 90
+      NumberOfWorkers: 2
+      WorkerType: 'G.1X'
+
+  GlueJobRawEmployees:
+    Type: 'AWS::Glue::Job'
+    Properties:
+      Name: !Sub ${Course}${Subject}-${Group}-employees-raw
+      Role: !GetAtt IAMRole.Arn
+      Command:
+        Name: 'glueetl'
+        ScriptLocation: !Sub 's3://${BucketArtifacts}/glue-scripts/employees-raw.py'
+        PythonVersion: '3'
+      DefaultArguments:
+        "--extra-py-files": !Sub 's3://${BucketArtifacts}/python-libs/unidecode.zip'
+        "--enable-glue-datacatalog": ""
+        "--enable-metrics": ""
+        "--file": ""
+        "--bucket": ""
+        "--raw_bucket": !Ref BucketRaw
+        "--database": "rwzd"
+        "--tablename": "employees"
+      MaxRetries: 0
+      GlueVersion: '4.0'
+      Timeout: 60
+      NumberOfWorkers: 2
+      WorkerType: 'G.1X'
+
+  GlueJobRawClaims:
+    Type: 'AWS::Glue::Job'
+    Properties:
+      Name: !Sub ${Course}${Subject}-${Group}-claims-raw
+      Role: !GetAtt IAMRole.Arn
+      Command:
+        Name: 'glueetl'
+        ScriptLocation: !Sub 's3://${BucketArtifacts}/glue-scripts/claims-raw.py'
+        PythonVersion: '3'
+      DefaultArguments:
+        "--extra-py-files": !Sub 's3://${BucketArtifacts}/python-libs/unidecode.zip'
+        "--enable-glue-datacatalog": ""
+        "--enable-metrics": ""
+        "--file": ""
+        "--bucket": ""
+        "--raw_bucket": !Ref BucketRaw
+        "--database": "rwzd"
+        "--tablename": "claims"
+      MaxRetries: 0
+      GlueVersion: '4.0'
+      Timeout: 60
+      NumberOfWorkers: 2
+      WorkerType: 'G.1X'
+
+############################################################################################################
+#######################################      STEP FUNCTION      ############################################
+############################################################################################################
+
+  StepFunction:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub ${Course}${Subject}-${Group}-step-function
+      Role: !GetAtt IAMRole.Arn
+      Definition:
+        StartAt: Decide
+        States:
+          Decide:
+            Type: Choice
+            Choices:
+              - Variable: "$.detail.object.key"
+                StringMatches: "Dados/Bancos/*"
+                Next: RunGlueJobBanksRaw
+              - Variable: "$.detail.object.key"
+                StringMatches: "Dados/Empregados/*"
+                Next: RunGlueJobEmployeesRaw
+              - Variable: "$.detail.object.key"
+                StringMatches: "Dados/Reclamacoes/*"
+                Next: RunGlueJobClaimsRaw
+            Default: InvalidExecution
+          RunGlueJobBanksRaw:
+            Type: Task
+            Resource: arn:aws:states:::glue:startJobRun.sync
+            Parameters:
+              JobName: !Ref GlueJobRawBanks
+              Arguments: {
+                  "--file.$": "$$.Execution.Input.detail.object.key",
+                  "--bucket.$": "$$.Execution.Input.detail.bucket.name"
+                }
+            End: true
+          RunGlueJobEmployeesRaw:
+            Type: Task
+            Resource: arn:aws:states:::glue:startJobRun.sync
+            Parameters:
+              JobName: !Ref GlueJobRawEmployees
+              Arguments: {
+                  "--file.$": "$$.Execution.Input.detail.object.key",
+                  "--bucket.$": "$$.Execution.Input.detail.bucket.name"
+                }
+            End: true
+          RunGlueJobClaimsRaw:
+            Type: Task
+            Resource: arn:aws:states:::glue:startJobRun.sync
+            Parameters:
+              JobName: !Ref GlueJobRawClaims
+              Arguments: {
+                  "--file.$": "$$.Execution.Input.detail.object.key",
+                  "--bucket.$": "$$.Execution.Input.detail.bucket.name"
+                }
+            End: true
+          InvalidExecution:
+            Type: Fail
+      Tags:
+        "Projeto": "Ingestao de Dados"
+
+############################################################################################################
+#######################################      EVENT BRIDGE      #############################################
+############################################################################################################
+
+  EventBridgeRuleBank:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      EventPattern:
+        source:
+          - "aws.s3"
+        detail-type:
+          - "Object Created"
+        resources:
+          - !GetAtt BucketIngestion.Arn
+        detail:
+          object:
+            key:
+              - prefix: "Dados/Bancos/"
+      Targets:
+        - Arn: !GetAtt StepFunction.Arn
+          Id: "StepFunctionTargetBancos"
+          RoleArn: !GetAtt IAMRole.Arn
+
+  EventBridgeRuleEmployees:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      EventPattern:
+        source:
+          - "aws.s3"
+        detail-type:
+          - "Object Created"
+        resources:
+          - !GetAtt BucketIngestion.Arn
+        detail:
+          object:
+            key:
+              - prefix: "Dados/Empregados/"
+      Targets:
+        - Arn: !GetAtt StepFunction.Arn
+          Id: "StepFunctionTargetEmpregados"
+          RoleArn: !GetAtt IAMRole.Arn
+
+  EventBridgeRuleClaims:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      EventPattern:
+        source:
+          - "aws.s3"
+        detail-type:
+          - "Object Created"
+        resources:
+          - !GetAtt BucketIngestion.Arn
+        detail:
+          object:
+            key:
+              - prefix: "Dados/Reclamacoes/"
+      Targets:
+        - Arn: !GetAtt StepFunction.Arn
+          Id: "StepFunctionTargetReclamacoes"
+          RoleArn: !GetAtt IAMRole.Arn
+
+############################################################################################################
+#########################################      IAM ROLE      ###############################################
+############################################################################################################
+
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - glue.amazonaws.com
+                - states.amazonaws.com
+                - events.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "${AWS::StackName}-Role"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: "*"
+                Resource: "*"
       Tags:
         - Key: Projeto
           Value: Ingestao de Dados
-
-  EMRClusterIDParameter:
-    Type: 'AWS::SSM::Parameter'
-    Properties:
-      Name: '/emr/cluster/id'
-      Type: 'String'
-      Value: !Ref EMRCluster
-      Tags:
-        Projeto: Ingestao de Dados
