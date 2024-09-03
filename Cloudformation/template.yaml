@@ -236,6 +236,14 @@ Resources:
       DatabaseInput:
         Name: 'trzd'
         Description: 'Database da camada Trusted'
+
+  GlueDatabaseDelivery:
+    Type: 'AWS::Glue::Database'
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: 'dlzd'
+        Description: 'Database da camada Delivery'
   
   GlueConnectionSubnet:
     Type: AWS::Glue::Connection
@@ -410,7 +418,7 @@ Resources:
         "--extra-py-files": !Sub 's3://${BucketArtifacts}/python-libs/unidecode.zip'
         "--enable-glue-datacatalog": ""
         "--enable-metrics": ""
-        # "--delivery_bucket": !Ref BucketDelivery #???
+        "--delivery_bucket": !Ref BucketDelivery
         "--database": "dlzd"
         "--tablename": "bank_employment_satisfaction"
         "--secretname": "mydb-secret"
@@ -510,6 +518,24 @@ Resources:
       Tags:
         "Projeto": "Ingestao de Dados"
 
+
+  StepFunctionDelivery:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub ${Course}${Subject}-${Group}-step-function-delivery
+      Role: !GetAtt IAMRole.Arn
+      Definition:
+        StartAt: RunGlueJobDelivery
+        States:
+          RunGlueJobDelivery:
+            Type: Task
+            Resource: arn:aws:states:::glue:startJobRun.sync
+            Parameters:
+              JobName: !Ref GlueJobDelivery
+            End: true
+      Tags:
+        "Projeto": "Ingestao de Dados"
+
 ############################################################################################################
 #######################################      EVENT BRIDGE      #############################################
 ############################################################################################################
@@ -569,6 +595,17 @@ Resources:
       Targets:
         - Arn: !GetAtt StepFunction.Arn
           Id: "StepFunctionTargetReclamacoes"
+          RoleArn: !GetAtt IAMRole.Arn
+
+  EventBridgeSchedulerDelivery:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Description: "Scheduler for triggering the delivery step function"
+      State: 'ENABLED'
+      ScheduleExpression: 'rate(10 minutes)'
+      Targets:
+        - Arn: !GetAtt StepFunctionDelivery.Arn
+          Id: "StepFunctionDeliveryScheduler"
           RoleArn: !GetAtt IAMRole.Arn
 
 ############################################################################################################
