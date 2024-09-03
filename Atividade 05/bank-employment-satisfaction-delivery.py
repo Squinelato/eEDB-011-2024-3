@@ -20,25 +20,22 @@ job.init(args['JOB_NAME'], args)
 def solve_args(args_list):
     return getResolvedOptions(sys.argv, args_list)
 
-def get_secret_values(secretname):
+def get_secret_values(secretid):
     client = boto3.session.Session().client(service_name='secretsmanager')
-    secret_string = client.get_secret_value(SecretId=secretname)['SecretString']
+    secret_string = client.get_secret_value(SecretId=secretid)['SecretString']
     return json.loads(secret_string)
     
 def read_source_table(table_name):
-    return spark.sql(f"""SELEFT * FROM trzd.{table_name}""")
+    return spark.sql(f"""SELECT * FROM trzd.{table_name}""")
     
 print('Delivery')
 
-args_list = ['file','bucket','secretname','database','tablename']
+args_list = ['secretname','database','tablename']
 args = solve_args(args_list)
 
-file = args['file']
-ingestion_bucket = args['bucket']
 secretname = args['secretname']
 database = args['database']
 table_name = args['tablename']
-print(args)
 
 secret_dict = get_secret_values(secretname)
 
@@ -46,7 +43,7 @@ host = secret_dict['host']
 port = secret_dict['port']
 username = secret_dict['username']
 password = secret_dict['password']
-database = 'mydb'
+database = secret_dict['dbname']
 
 jdbc_url = f'jdbc:{host}:{port}/{database}'
 jdbc_properties = {
@@ -82,7 +79,7 @@ df_bank_employment_satisfaction = df_bank_employment_satisfaction.drop_duplicate
 count_df_bank_employment_satisfaction = df_bank_employment_satisfaction.count()
 print(f'count_df_bank_employment_satisfaction: {count_df_bank_employment_satisfaction}')
 
-df_bank_employment_satisfaction.show(truncate=False)
+df_bank_employment_satisfaction.show(truncate=False) # remover depois
 
 df_bank_employment_satisfaction.write.jdbc(url=jdbc_url, 
                                           table=table_name, 
@@ -93,8 +90,8 @@ df = spark.read.jdbc(
     url=jdbc_url,
     table=table_name,
     properties=jdbc_properties
-)
+) # remover depois
 
-df.show(truncate=False, n=20)
+df.show(truncate=False, n=20) # remover depois
 
 job.commit()

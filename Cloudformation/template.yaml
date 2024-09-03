@@ -375,7 +375,7 @@ Resources:
       NumberOfWorkers: 2
       WorkerType: 'G.1X'
 
-  GlueJobDeliveryClaims:
+  GlueJobDelivery:
     Type: 'AWS::Glue::Job'
     Properties:
       Name: !Sub ${Course}${Subject}-${Group}-delivery
@@ -391,12 +391,10 @@ Resources:
         "--extra-py-files": !Sub 's3://${BucketArtifacts}/python-libs/unidecode.zip'
         "--enable-glue-datacatalog": ""
         "--enable-metrics": ""
-        "--file": ""
-        "--bucket": ""
         # "--delivery_bucket": !Ref BucketDelivery #???
         "--database": "dlzd"
         "--tablename": "bank_employment_satisfaction"
-        "--secretname": !Ref SecretStore
+        "--secretname": "mydb-secret"
       MaxRetries: 0
       GlueVersion: '4.0'
       Timeout: 60
