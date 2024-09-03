@@ -27,15 +27,25 @@ def get_secret_values(secretid):
     
 def read_source_table(table_name):
     return spark.sql(f"""SELECT * FROM trzd.{table_name}""")
-    
+
+def save_parquet(df, path, target_database, target_table):
+    print('Writing table...')
+    df.write \
+    .mode('overwrite') \
+    .format('parquet') \
+    .option('compression', 'snappy') \
+    .option('path', path) \
+    .saveAsTable(f'{target_database}.{target_table}')
+
 print('Delivery')
 
-args_list = ['secretname','database','tablename']
+args_list = ['secretname','database','tablename', 'delivery_bucket']
 args = solve_args(args_list)
 
 secretname = args['secretname']
 database = args['database']
 table_name = args['tablename']
+delivery_bucket = args['delivery_bucket']
 
 secret_dict = get_secret_values(secretname)
 
@@ -90,6 +100,13 @@ df_bank_employment_satisfaction.write.jdbc(url=jdbc_url,
                                           table=table_name, 
                                           mode="overwrite", 
                                           properties=jdbc_properties)
+
+count_delivery = df_bank_employment_satisfaction.count()
+print(f'count: {count_delivery}')
+
+if count_delivery > 0:
+    s3_path = f'{delivery_bucket}/{database}/{table_name}/'
+    save_parquet(df_bank_employment_satisfaction, s3_path, database, table_name)
                                           
 df = spark.read.jdbc(
     url=jdbc_url,
@@ -98,5 +115,7 @@ df = spark.read.jdbc(
 )
 
 df.show(truncate=False, n=20)
+
+print('End.')
 
 job.commit()
