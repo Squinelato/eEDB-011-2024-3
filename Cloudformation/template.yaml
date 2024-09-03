@@ -600,6 +600,18 @@ Resources:
                   "--file.$": "$$.Execution.Input.detail.object.key",
                   "--bucket.$": "$$.Execution.Input.detail.bucket.name"
                 }
+            Next: DataQualityRulesetBanks
+          DataQualityRulesetBanks:
+            Type: Task
+            Resource: arn:aws:states:::aws-sdk:glue:startDataQualityRulesetEvaluationRun
+            Parameters:
+              DataSource:
+                GlueTable:
+                  DatabaseName: 'trzd'
+                  TableName: 'banks'
+              Role: !GetAtt IAMRole.Arn
+              RulesetNames:
+                - !Ref DataQualityRulesetBanks
             End: true
           RunGlueJobEmployeesRaw:
             Type: Task
@@ -620,6 +632,18 @@ Resources:
                   "--file.$": "$$.Execution.Input.detail.object.key",
                   "--bucket.$": "$$.Execution.Input.detail.bucket.name"
                 }
+            Next: DataQualityRulesetEmployees
+          DataQualityRulesetEmployees:
+            Type: Task
+            Resource: arn:aws:states:::aws-sdk:glue:startDataQualityRulesetEvaluationRun
+            Parameters:
+              DataSource:
+                GlueTable:
+                  DatabaseName: 'trzd'
+                  TableName: 'employees'
+              Role: !GetAtt IAMRole.Arn
+              RulesetNames:
+                - !Ref DataQualityRulesetEmployees
             End: true
           RunGlueJobClaimsRaw:
             Type: Task
@@ -640,6 +664,18 @@ Resources:
                   "--file.$": "$$.Execution.Input.detail.object.key",
                   "--bucket.$": "$$.Execution.Input.detail.bucket.name"
                 }
+            End: DataQualityRulesetClaims
+          DataQualityRulesetClaims:
+            Type: Task
+            Resource: arn:aws:states:::aws-sdk:glue:startDataQualityRulesetEvaluationRun
+            Parameters:
+              DataSource:
+                GlueTable:
+                  DatabaseName: 'trzd'
+                  TableName: 'claims'
+              Role: !GetAtt IAMRole.Arn
+              RulesetNames:
+                - !Ref DataQualityRulesetClaims
             End: true
           InvalidExecution:
             Type: Fail
@@ -660,6 +696,18 @@ Resources:
             Resource: arn:aws:states:::glue:startJobRun.sync
             Parameters:
               JobName: !Ref GlueJobDelivery
+            Next: DataQualityRulesetBankEmploymentSatisfaction
+          DataQualityRulesetBankEmploymentSatisfaction:
+            Type: Task
+            Resource: arn:aws:states:::aws-sdk:glue:startDataQualityRulesetEvaluationRun
+            Parameters:
+              DataSource:
+                GlueTable:
+                  DatabaseName: 'dlzd'
+                  TableName: 'bank_employment_satisfaction'
+              Role: !GetAtt IAMRole.Arn
+              RulesetNames:
+                - !Ref DataQualityRulesetBankEmploymentSatisfaction
             End: true
       Tags:
         "Projeto": "Ingestao de Dados"
