@@ -47,6 +47,12 @@ database = args['database']
 table_name = args['tablename']
 delivery_bucket = args['delivery_bucket']
 
+print('secretname', secretname)
+print('database', database)
+print('tablename', table_name)
+print('delivery_bucket', delivery_bucket)
+print('args', args)
+
 secret_dict = get_secret_values(secretname)
 
 host = secret_dict['host']
@@ -101,11 +107,9 @@ df_bank_employment_satisfaction.write.jdbc(url=jdbc_url,
                                           mode="overwrite", 
                                           properties=jdbc_properties)
 
-count_delivery = df_bank_employment_satisfaction.count()
-print(f'count: {count_delivery}')
-
-if count_delivery > 0:
+if count_df_bank_employment_satisfaction > 0:
     s3_path = f'{delivery_bucket}/{database}/{table_name}/'
+    print('s3_path', s3_path)
     save_parquet(df_bank_employment_satisfaction, s3_path, database, table_name)
                                           
 df = spark.read.jdbc(
