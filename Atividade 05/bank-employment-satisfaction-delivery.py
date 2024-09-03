@@ -43,9 +43,10 @@ host = secret_dict['host']
 port = secret_dict['port']
 username = secret_dict['username']
 password = secret_dict['password']
-database = secret_dict['dbname']
+engine = secret_dict['engine']
+dbname = secret_dict['dbname']
 
-jdbc_url = f'jdbc:{host}:{port}/{database}'
+jdbc_url = f'jdbc:{engine}://{host}:{port}/{dbname}'
 jdbc_properties = {
     'user': username,
     'password': password,
@@ -55,6 +56,10 @@ jdbc_properties = {
 df_banks = read_source_table('banks')
 df_employee = read_source_table('employees')
 df_claims = read_source_table('claims')
+
+df_banks = df_banks.drop('filename')
+df_employee = df_employee.drop('filename')
+df_claims = df_claims.drop('filename')
 
 df_banks = df_banks.drop('financial_institution_name')
 
@@ -79,7 +84,7 @@ df_bank_employment_satisfaction = df_bank_employment_satisfaction.drop_duplicate
 count_df_bank_employment_satisfaction = df_bank_employment_satisfaction.count()
 print(f'count_df_bank_employment_satisfaction: {count_df_bank_employment_satisfaction}')
 
-df_bank_employment_satisfaction.show(truncate=False) # remover depois
+df_bank_employment_satisfaction.show(truncate=False)
 
 df_bank_employment_satisfaction.write.jdbc(url=jdbc_url, 
                                           table=table_name, 
@@ -90,8 +95,8 @@ df = spark.read.jdbc(
     url=jdbc_url,
     table=table_name,
     properties=jdbc_properties
-) # remover depois
+)
 
-df.show(truncate=False, n=20) # remover depois
+df.show(truncate=False, n=20)
 
 job.commit()
