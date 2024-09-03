@@ -28,13 +28,13 @@ def get_secret_values(secretid):
 def read_source_table(table_name):
     return spark.sql(f"""SELECT * FROM trzd.{table_name}""")
 
-def save_parquet(df, path, target_database, target_table):
+def save_parquet(df, bucket, target_database, target_table):
     print('Writing table...')
     df.write \
     .mode('overwrite') \
     .format('parquet') \
     .option('compression', 'snappy') \
-    .option('path', path) \
+    .option('path', f's3://{bucket}/{target_database}/{target_table}/') \
     .saveAsTable(f'{target_database}.{target_table}')
 
 print('Delivery')
@@ -47,10 +47,6 @@ database = args['database']
 table_name = args['tablename']
 delivery_bucket = args['delivery_bucket']
 
-print('secretname', secretname)
-print('database', database)
-print('tablename', table_name)
-print('delivery_bucket', delivery_bucket)
 print('args', args)
 
 secret_dict = get_secret_values(secretname)
@@ -108,9 +104,7 @@ df_bank_employment_satisfaction.write.jdbc(url=jdbc_url,
                                           properties=jdbc_properties)
 
 if count_df_bank_employment_satisfaction > 0:
-    s3_path = f'{delivery_bucket}/{database}/{table_name}/'
-    print('s3_path', s3_path)
-    save_parquet(df_bank_employment_satisfaction, s3_path, database, table_name)
+    save_parquet(df_bank_employment_satisfaction, delivery_bucket, database, table_name)
                                           
 df = spark.read.jdbc(
     url=jdbc_url,
