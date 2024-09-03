@@ -429,6 +429,134 @@ Resources:
       WorkerType: 'G.1X'
 
 ############################################################################################################
+#######################################      DATA QUALITY       ############################################
+############################################################################################################
+
+  DataQualityRulesetBanks:
+    Type: 'AWS::Glue::DataQualityRuleset'
+    Properties:
+      Name: !Sub '${AWS::StackName}-banks-ruleset'
+      Description: 'Data Quality Ruleset for trzd.banks table'
+      Ruleset: 'Rules = [
+        IsComplete "segment",
+        IsComplete "cnpj",
+        IsComplete "financial_institution_name",
+        IsComplete "sk_cnpj_segment",
+        IsComplete "filename" ]'
+      TargetTable:
+        DatabaseName: 'trzd'
+        TableName: 'banks'
+
+  DataQualityRulesetClaims:
+    Type: 'AWS::Glue::DataQualityRuleset'
+    Properties:
+      Name: !Sub '${AWS::StackName}-claims-ruleset'
+      Description: 'Data Quality Ruleset for trzd.claims table'
+      Ruleset: 'Rules = [
+        IsComplete "year_claim",
+        IsComplete "quarter_claim",
+        IsComplete "category",
+        IsComplete "bank_type",
+        IsComplete "cnpj",
+        IsComplete "financial_institution_name",
+        IsComplete "bank_index",        
+        IsComplete "number_of_regulated_proceeding_complaints",
+        IsComplete "number_of_regulated_other_complaints",
+        IsComplete "number_of_unregulated_complaints",
+        IsComplete "total_number_of_complaints",
+        IsComplete "total_number_of_ccs_and_scr_customers",
+        IsComplete "number_of_ccs_customers",
+        IsComplete "number_of_scr_customers",
+        IsComplete "sk_financial_institution_name",
+        IsComplete "filename" ]'
+      TargetTable:
+        DatabaseName: 'trzd'
+        TableName: 'claims'
+
+  DataQualityRulesetEmployees:
+    Type: 'AWS::Glue::DataQualityRuleset'
+    Properties:
+      Name: !Sub '${AWS::StackName}-employees-ruleset'
+      Description: 'Data Quality Ruleset for trzd.employees table'
+      Ruleset: 'Rules = [
+        IsComplete "employer_name",
+        IsComplete "reviews_count",
+        IsComplete "culture_count",
+        IsComplete "salaries_count",
+        IsComplete "benefits_count",
+        IsComplete "employer_website",
+        IsComplete "employer_headquarters",
+        IsComplete "employer_founded",
+        IsComplete "employer_industry",
+        IsComplete "employer_revenue",
+        IsComplete "url",
+        IsComplete "general_score",
+        IsComplete "culture_values_score",
+        IsComplete "diversity_inclusion_score",
+        IsComplete "life_quality_score",
+        IsComplete "senior_leadership_score",
+        IsComplete "compensation_benefits_score",
+        IsComplete "career_opportunities_score",
+        IsComplete "recommendation_score",
+        IsComplete "company_positive_score",
+        IsComplete "segment",
+        IsComplete "financial_institution_name",
+        IsComplete "match_percent",
+        IsComplete "sk_financial_institution_name",
+        IsComplete "filename" ]'
+      TargetTable:
+        DatabaseName: 'trzd'
+        TableName: 'employees'
+
+  DataQualityRulesetBankEmploymentSatisfaction:
+    Type: 'AWS::Glue::DataQualityRuleset'
+    Properties:
+      Name: !Sub '${AWS::StackName}-bank-employment-satisfaction-ruleset'
+      Description: 'Data Quality Ruleset for trzd.bank_employment_satisfaction table'
+      Ruleset: 'Rules = [
+        IsComplete "sk_cnpj_segment",
+        IsComplete "cnpj",
+        IsComplete "year_claim",
+        IsComplete "quarter_claim",
+        IsComplete "category",
+        IsComplete "bank_type",
+        IsComplete "financial_institution_name",
+        IsComplete "bank_index",
+        IsComplete "number_of_regulated_proceeding_complaints",
+        IsComplete "number_of_regulated_other_complaints",
+        IsComplete "number_of_unregulated_complaints",
+        IsComplete "total_number_of_complaints",
+        IsComplete "total_number_of_ccs_and_scr_customers",
+        IsComplete "number_of_ccs_customers",
+        IsComplete "number_of_scr_customers",
+        IsComplete "sk_financial_institution_name",
+        IsComplete "segment",
+        IsComplete "employer_name",
+        IsComplete "reviews_count",
+        IsComplete "culture_count",
+        IsComplete "salaries_count",
+        IsComplete "benefits_count",
+        IsComplete "employer_website",
+        IsComplete "employer_headquarters",
+        IsComplete "employer_founded",
+        IsComplete "employer_industry",
+        IsComplete "employer_revenue",
+        IsComplete "url",
+        IsComplete "general_score",
+        IsComplete "culture_values_score",
+        IsComplete "diversity_inclusion_score",
+        IsComplete "life_quality_score",
+        IsComplete "senior_leadership_score",
+        IsComplete "compensation_benefits_score",
+        IsComplete "career_opportunities_score",
+        IsComplete "recommendation_score",
+        IsComplete "company_positive_score",
+        IsComplete "match_percent" ]'
+      TargetTable:
+        DatabaseName: 'dlzd'
+        TableName: 'bank_employment_satisfaction'
+
+############################################################################################################
 #######################################      STEP FUNCTION      ############################################
 ############################################################################################################
 
