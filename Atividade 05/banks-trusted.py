@@ -18,6 +18,11 @@ spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 
+def unicode_normalizer(word: str) -> str:
+    return unidecode(word)
+    
+unaccent = udf(unicode_normalizer, StringType())
+
 def save_parquet(df, path, target_database, target_table):
     print('Writing table...')
     df.write \
@@ -31,24 +36,21 @@ def save_parquet(df, path, target_database, target_table):
 def solve_args(args_list):
     return getResolvedOptions(sys.argv, args_list)
 
-print('Raw Banks')
+print('Trusted Banks')
 
-args_list = ['file','bucket','raw_bucket','database','tablename']
+args_list = ['file','bucket','trusted_bucket','database','tablename']
 args = solve_args(args_list)
 
 file = args['file']
 ingestion_bucket = args['bucket']
-raw_bucket = args['raw_bucket']
+trusted_bucket = args['trusted_bucket']
 database = args['database']
 table_name = args['tablename']
 print(args)
 
 filename = file.split('/')[-1]
-raw_bucket = f's3://{raw_bucket}'
-ingestion_bucket_path = f's3://{ingestion_bucket}/{file}'
-
-print(f'raw_bucket: {raw_bucket}')
-print(f'ingestion_bucket_path: {ingestion_bucket_path}')
+trusted_bucket = f's3://{trusted_bucket}'
+print(f'trusted_bucket: {trusted_bucket}')
 
 filenames_list = []
 table_exists = spark.sql(f"SHOW TABLES IN {database} LIKE '{table_name}'").count() > 0
@@ -61,14 +63,24 @@ if table_exists:
 print('filenames_list:', filenames_list)
 
 if filename not in filenames_list:
-    df = spark.read.csv(ingestion_bucket_path, sep='\t', encoding='utf8', header=True)
-    df = df.withColumn('filename', lit(filename))
+    df = spark.sql(f"""SELECT * FROM rwzd.{table_name} WHERE filename = '{filename}'""")
+    
+    df = df \
+        .withColumnRenamed('Segmento', 'segment') \
+        .withColumnRenamed('CNPJ', 'cnpj') \
+        .withColumnRenamed('Nome', 'financial_institution_name')
+    
+    df = df \
+        .withColumn('cnpj', when(col('cnpj') == '', lit(None).cast(StringType())) \
+        .otherwise(lpad(col('cnpj'), 8, '0')))
+        
+    df = df.withColumn('sk_cnpj_segment', sha1(concat(col('cnpj'), col('segment'))))
     
     df.printSchema()
     
     count = df.count()
     print(f'count: {count}')
-    s3_path = f'{raw_bucket}/{database}/{table_name}/'
+    s3_path = f'{trusted_bucket}/{database}/{table_name}/'
     if count > 0:
         save_parquet(df, s3_path, database, table_name)
     print('End.')

@@ -1,16 +1,21 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
-Description: 'Stack de recursos do grupo 2 da Especialização Engenharia de Dados e Big Data turma de 2024 para a aula de Ingestão de Dados'
+Description: 'Stack eedb011-2024-g2 com os recursos do grupo 2 da Especialização Engenharia de Dados e Big Data turma de 2024 para a aula de Ingestão de Dados'
+
 Parameters:
+
   Course:
     Default: eedb
     Type: String
+
   Subject:
     Default: 011-2024
     Type: String
+
   Group:
     Default: g2
     Type: String
+
   DBInstanceID:
     Default: eEDB
     Description: Database instance
@@ -19,14 +24,17 @@ Parameters:
     MaxLength: 63
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
     ConstraintDescription: Must begin with a letter and must not end with a hyphen or contain two consecutive hyphens.
+
   DBName:
     Default: mydb
     Description: Database name
     Type: String
+
   DBInstanceClass:
     Default: db.t4g.micro
     Description: DB instance class
     Type: String
+
   DBAllocatedStorage:
     Default: 20
     Description: The size of the database (GiB)
@@ -34,6 +42,7 @@ Parameters:
     MinValue: 20
     MaxValue: 65536
     ConstraintDescription: must be between 20 and 65536 GiB.
+
   DBUsername:
     NoEcho: true
     Description: Username for MySQL database access
@@ -42,6 +51,7 @@ Parameters:
     MaxLength: 16
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
     ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+
   DBPassword:
     NoEcho: true
     Description: Password MySQL database access
@@ -50,9 +60,22 @@ Parameters:
     MaxLength: 41
     AllowedPattern: '[a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
+
   SecretName:
     Default: mydb-secret
     Description: Secret name in AWS Secrets Manager
+    Type: String
+
+  subnetID:
+    NoEcho: true
+    Type: String
+
+  availabilityZone:
+    NoEcho: true
+    Type: String
+
+  securityGroupId:
+    NoEcho: true
     Type: String
 
 Resources:
@@ -194,6 +217,19 @@ Resources:
       DatabaseInput:
         Name: 'trzd'
         Description: 'Database da camada Trusted'
+  
+  GlueConnectionSubnet:
+    Type: AWS::Glue::Connection
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      ConnectionInput:
+        Name: !Sub "${AWS::StackName}-vpc-connection"
+        ConnectionType: NETWORK
+        PhysicalConnectionRequirements:
+          SubnetId: !Ref subnetID
+          AvailabilityZone: !Ref availabilityZone
+          SecurityGroupIdList:
+            - !Ref securityGroupId
 
   GlueJobRawBanks:
     Type: 'AWS::Glue::Job'
@@ -215,7 +251,7 @@ Resources:
         "--tablename": "banks"
       MaxRetries: 0
       GlueVersion: '4.0'
-      Timeout: 90
+      Timeout: 60
       NumberOfWorkers: 2
       WorkerType: 'G.1X'
 
@@ -267,6 +303,106 @@ Resources:
       NumberOfWorkers: 2
       WorkerType: 'G.1X'
 
+  GlueJobTrustedBanks:
+    Type: 'AWS::Glue::Job'
+    Properties:
+      Name: !Sub ${Course}${Subject}-${Group}-banks-trusted
+      Role: !GetAtt IAMRole.Arn
+      Command:
+        Name: 'glueetl'
+        ScriptLocation: !Sub 's3://${BucketArtifacts}/glue-scripts/banks-trusted.py'
+        PythonVersion: '3'
+      DefaultArguments:
+        "--extra-py-files": !Sub 's3://${BucketArtifacts}/python-libs/unidecode.zip'
+        "--enable-glue-datacatalog": ""
+        "--enable-metrics": ""
+        "--file": ""
+        "--bucket": ""
+        "--trusted_bucket": !Ref BucketTrusted
+        "--database": "trzd"
+        "--tablename": "banks"
+      MaxRetries: 0
+      GlueVersion: '4.0'
+      Timeout: 60
+      NumberOfWorkers: 2
+      WorkerType: 'G.1X'
+
+  GlueJobTrustedEmployees:
+    Type: 'AWS::Glue::Job'
+    Properties:
+      Name: !Sub ${Course}${Subject}-${Group}-employees-trusted
+      Role: !GetAtt IAMRole.Arn
+      Command:
+        Name: 'glueetl'
+        ScriptLocation: !Sub 's3://${BucketArtifacts}/glue-scripts/employees-trusted.py'
+        PythonVersion: '3'
+      DefaultArguments:
+        "--extra-py-files": !Sub 's3://${BucketArtifacts}/python-libs/unidecode.zip'
+        "--enable-glue-datacatalog": ""
+        "--enable-metrics": ""
+        "--file": ""
+        "--bucket": ""
+        "--trusted_bucket": !Ref BucketTrusted
+        "--database": "trzd"
+        "--tablename": "employees"
+      MaxRetries: 0
+      GlueVersion: '4.0'
+      Timeout: 60
+      NumberOfWorkers: 2
+      WorkerType: 'G.1X'
+
+  GlueJobTrustedClaims:
+    Type: 'AWS::Glue::Job'
+    Properties:
+      Name: !Sub ${Course}${Subject}-${Group}-claims-trusted
+      Role: !GetAtt IAMRole.Arn
+      Command:
+        Name: 'glueetl'
+        ScriptLocation: !Sub 's3://${BucketArtifacts}/glue-scripts/claims-trusted.py'
+        PythonVersion: '3'
+      DefaultArguments:
+        "--extra-py-files": !Sub 's3://${BucketArtifacts}/python-libs/unidecode.zip'
+        "--enable-glue-datacatalog": ""
+        "--enable-metrics": ""
+        "--file": ""
+        "--bucket": ""
+        "--trusted_bucket": !Ref BucketTrusted
+        "--database": "trzd"
+        "--tablename": "claims"
+      MaxRetries: 0
+      GlueVersion: '4.0'
+      Timeout: 60
+      NumberOfWorkers: 2
+      WorkerType: 'G.1X'
+
+  GlueJobDeliveryClaims:
+    Type: 'AWS::Glue::Job'
+    Properties:
+      Name: !Sub ${Course}${Subject}-${Group}-delivery
+      Role: !GetAtt IAMRole.Arn
+      Command:
+        Name: 'glueetl'
+        ScriptLocation: !Sub 's3://${BucketArtifacts}/glue-scripts/bank-employment-satisfaction-delivery.py'
+        PythonVersion: '3'
+      Connections:
+        Connections:
+          - !Ref GlueConnectionSubnet
+      DefaultArguments:
+        "--extra-py-files": !Sub 's3://${BucketArtifacts}/python-libs/unidecode.zip'
+        "--enable-glue-datacatalog": ""
+        "--enable-metrics": ""
+        "--file": ""
+        "--bucket": ""
+        # "--delivery_bucket": !Ref BucketDelivery #???
+        "--database": "dlzd"
+        "--tablename": "bank_employment_satisfaction"
+        "--secretname": !Ref SecretStore
+      MaxRetries: 0
+      GlueVersion: '4.0'
+      Timeout: 60
+      NumberOfWorkers: 2
+      WorkerType: 'G.1X'
+
 ############################################################################################################
 #######################################      STEP FUNCTION      ############################################
 ############################################################################################################
@@ -301,6 +437,16 @@ Resources:
                   "--file.$": "$$.Execution.Input.detail.object.key",
                   "--bucket.$": "$$.Execution.Input.detail.bucket.name"
                 }
+            Next: RunGlueJobBanksTrusted
+          RunGlueJobBanksTrusted:
+            Type: Task
+            Resource: arn:aws:states:::glue:startJobRun.sync
+            Parameters:
+              JobName: !Ref GlueJobTrustedBanks
+              Arguments: {
+                  "--file.$": "$$.Execution.Input.detail.object.key",
+                  "--bucket.$": "$$.Execution.Input.detail.bucket.name"
+                }
             End: true
           RunGlueJobEmployeesRaw:
             Type: Task
@@ -311,12 +457,32 @@ Resources:
                   "--file.$": "$$.Execution.Input.detail.object.key",
                   "--bucket.$": "$$.Execution.Input.detail.bucket.name"
                 }
+            Next: RunGlueJobEmployeesTrusted
+          RunGlueJobEmployeesTrusted:
+            Type: Task
+            Resource: arn:aws:states:::glue:startJobRun.sync
+            Parameters:
+              JobName: !Ref GlueJobTrustedEmployees
+              Arguments: {
+                  "--file.$": "$$.Execution.Input.detail.object.key",
+                  "--bucket.$": "$$.Execution.Input.detail.bucket.name"
+                }
             End: true
           RunGlueJobClaimsRaw:
             Type: Task
             Resource: arn:aws:states:::glue:startJobRun.sync
             Parameters:
               JobName: !Ref GlueJobRawClaims
+              Arguments: {
+                  "--file.$": "$$.Execution.Input.detail.object.key",
+                  "--bucket.$": "$$.Execution.Input.detail.bucket.name"
+                }
+            Next: RunGlueJobClaimsTrusted
+          RunGlueJobClaimsTrusted:
+            Type: Task
+            Resource: arn:aws:states:::glue:startJobRun.sync
+            Parameters:
+              JobName: !Ref GlueJobTrustedClaims
               Arguments: {
                   "--file.$": "$$.Execution.Input.detail.object.key",
                   "--bucket.$": "$$.Execution.Input.detail.bucket.name"

@@ -17,9 +17,9 @@ glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
-job.commit()
 
 def save_parquet(df, path, target_database, target_table):
+    print('Writing table...')
     df.write \
     .mode('append') \
     .partitionBy('filename') \
@@ -30,7 +30,7 @@ def save_parquet(df, path, target_database, target_table):
 
 def solve_args(args_list):
     return getResolvedOptions(sys.argv, args_list)
-
+    
 print('Raw Claims')
 
 args_list = ['file','bucket','raw_bucket','database','tablename']
@@ -47,27 +47,33 @@ filename = file.split('/')[-1]
 raw_bucket = f's3://{raw_bucket}'
 ingestion_bucket_path = f's3://{ingestion_bucket}/{file}'
 
-print(raw_bucket)
-print(ingestion_bucket_path)
+print(f'raw_bucket: {raw_bucket}')
+print(f'ingestion_bucket_path: {ingestion_bucket_path}')
 
-df = spark.read.csv(ingestion_bucket_path, sep=';', encoding='latin1', header=True)
-df = df.drop('_c14')
-df = df.withColumn('filename', lit(filename))
+filenames_list = []
+table_exists = spark.sql(f"SHOW TABLES IN {database} LIKE '{table_name}'").count() > 0
+print(f'Does table {database}.{table_name} exists? {table_exists}')
 
-df.printSchema()
-
-filenames_list = list()
-
-if spark.catalog.tableExists(f"{database}.{table_name}"):
-    df_filenames = spark.sql(f"SELECT DISTINCT filename FROM {database}.{table_name}")
-    filenames_list = [row['filename'] for row in df_filenames.collect()]
+if table_exists:
+    partitions_df = spark.sql(f"SHOW PARTITIONS {database}.{table_name}")
+    filenames_list = [row[0].split('=')[1] for row in partitions_df.collect()]
 
 print('filenames_list:', filenames_list)
 
 if filename not in filenames_list:
+    df = spark.read.csv(ingestion_bucket_path, sep=';', encoding='latin1', header=True)
+    df = df.drop('_c14')
+    df = df.withColumn('filename', lit(filename))
+    
+    df.printSchema()
+    
     count = df.count()
     print(f'count: {count}')
     s3_path = f'{raw_bucket}/{database}/{table_name}/'
-    save_parquet(df, s3_path, database, table_name)
+    if count > 0:
+        save_parquet(df, s3_path, database, table_name)
+    print('End.')
 else:
     print(f"Filename '{filename}' já existe na tabela. Salvamento ignorado.")
+
+job.commit()
