@@ -159,6 +159,25 @@ Resources:
         - Key: Projeto
           Value: Ingestao de Dados
 
+
+  BucketDelivery:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${Course}${Subject}-${Group}-${AWS::AccountId}-delivery
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Projeto
+          Value: Ingestao de Dados
+
 ############################################################################################################
 ###########################################      RDS      ##################################################
 ############################################################################################################
