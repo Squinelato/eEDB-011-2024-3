@@ -777,7 +777,7 @@ Resources:
     Type: 'AWS::Events::Rule'
     Properties:
       Description: "Scheduler for triggering the delivery step function"
-      State: 'ENABLED'
+      State: 'DISABLED'
       ScheduleExpression: 'rate(10 minutes)'
       Targets:
         - Arn: !GetAtt StepFunctionDelivery.Arn
@@ -813,3 +813,137 @@ Resources:
       Tags:
         - Key: Projeto
           Value: Ingestao de Dados
+
+  ProducerFunctionRole:
+    Type: 'AWS::IAM::Role'
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service: 'lambda.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: 'LambdaS3SQSPermissions'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 's3:GetObject'
+                Resource: 'arn:aws:s3:::eedb011-2024-g2-337171436930-ingestion/Dados/Reclamacoes/*'
+              - Effect: 'Allow'
+                Action:
+                  - 'sqs:SendMessage'
+                Resource: !GetAtt ClaimsSQSQueue.Arn
+              - Effect: Allow
+                Action:
+                - "logs:CreateLogGroup"
+                - "logs:CreateLogStream"
+                - "logs:PutLogEvents"
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+      Tags:
+        - Key: Projeto
+          Value: Ingestao de Dados
+
+  ConsumerFunctionRole:
+    Type: 'AWS::IAM::Role'
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service: 'lambda.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: 'LambdaSQSPermissions'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'sqs:ReceiveMessage'
+                  - 'sqs:DeleteMessage'
+                  - 'sqs:GetQueueAttributes'
+                Resource: !GetAtt ClaimsSQSQueue.Arn
+              - Effect: Allow
+                Action:
+                - "logs:CreateLogGroup"
+                - "logs:CreateLogStream"
+                - "logs:PutLogEvents"
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+      Tags:
+        - Key: Projeto
+          Value: Ingestao de Dados
+
+############################################################################################################
+############################################      SQS      #################################################
+############################################################################################################
+
+  ClaimsSQSQueue:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      QueueName: !Sub "${AWS::StackName}-event-queue"
+      VisibilityTimeout: 1000
+      Tags:
+        - Key: Projeto
+          Value: Ingestao de Dados
+
+  LambdaFunctionEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 20
+      MaximumBatchingWindowInSeconds: 60
+      Enabled: true
+      EventSourceArn: !GetAtt ClaimsSQSQueue.Arn
+      FunctionName: !GetAtt ConsumerFunction.Arn
+
+############################################################################################################
+##########################################      LAMBDA      ################################################
+############################################################################################################
+
+  ProducerFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-producer-function"
+      Handler: 'lambda-producer.lambda_handler'
+      Runtime: 'python3.9'
+      Role: !GetAtt ProducerFunctionRole.Arn
+      CodeUri:
+        Bucket: !Ref BucketArtifacts
+        Key: 'lambda-scripts/lambda-producer.zip'
+      Timeout: 900
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref ClaimsSQSQueue
+      Events:
+        S3Trigger:
+          Type: S3
+          Properties:
+            Bucket: !Ref BucketIngestion
+            Events: 's3:ObjectCreated:*'
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: 'Dados/Reclamacoes/'
+      Tags:
+        "Projeto": "Ingestao de Dados"
+
+  ConsumerFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-consumer-function"
+      Handler: 'lambda-consumer.lambda_handler'
+      Runtime: 'python3.9'
+      Role: !GetAtt ConsumerFunctionRole.Arn
+      CodeUri:
+        Bucket: !Ref BucketArtifacts
+        Key: 'lambda-scripts/lambda-consumer.zip'
+      Layers:
+        - !Sub arn:aws:lambda:${AWS::Region}:336392948345:layer:AWSSDKPandas-Python39:25
+      Timeout: 300
+      Tags:
+        "Projeto": "Ingestao de Dados"
