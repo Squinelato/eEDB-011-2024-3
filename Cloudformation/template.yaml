@@ -832,17 +832,17 @@ Resources:
               - Effect: 'Allow'
                 Action:
                   - 's3:GetObject'
-                Resource: 'arn:aws:s3:::eedb011-2024-g2-337171436930-ingestion/Dados/Reclamacoes/*'
+                Resource: !Sub 'arn:aws:s3:::${Course}${Subject}-${Group}-${AWS::AccountId}-ingestion/Dados/Reclamacoes/*'
               - Effect: 'Allow'
                 Action:
                   - 'sqs:SendMessage'
                 Resource: !GetAtt ClaimsSQSQueue.Arn
               - Effect: Allow
                 Action:
-                - "logs:CreateLogGroup"
-                - "logs:CreateLogStream"
-                - "logs:PutLogEvents"
-                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
       Tags:
         - Key: Projeto
           Value: Ingestao de Dados
@@ -850,6 +850,9 @@ Resources:
   ConsumerFunctionRole:
     Type: 'AWS::IAM::Role'
     Properties: 
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+        - arn:aws:iam::aws:policy/AmazonAthenaFullAccess
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -870,10 +873,19 @@ Resources:
                 Resource: !GetAtt ClaimsSQSQueue.Arn
               - Effect: Allow
                 Action:
-                - "logs:CreateLogGroup"
-                - "logs:CreateLogStream"
-                - "logs:PutLogEvents"
-                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                Resource: !Sub 'arn:aws:s3:::${Course}${Subject}-${Group}-${AWS::AccountId}-trusted/*'
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                  - 's3:DeleteObject'
+                Resource: !Sub 'arn:aws:s3:::${Course}${Subject}-${Group}-${AWS::AccountId}-raw/*'
       Tags:
         - Key: Projeto
           Value: Ingestao de Dados
