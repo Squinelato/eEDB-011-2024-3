@@ -1,9 +1,5 @@
 import awswrangler as wr
 import pandas as pd
-import boto3
-
-sqs = boto3.client('sqs')
-glue = boto3.client('glue')
 
 def lambda_handler(event, context):
     try:
