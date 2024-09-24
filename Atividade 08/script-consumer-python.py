@@ -65,8 +65,9 @@ header_columns = [
 pd.DataFrame(columns=header_columns).to_csv(csv_file_path, mode='w', sep=';', index=False, quotechar='"')
 
 def process_message(message):
+    print(f'message: {message}')
     values = message.split(';')
-    #print(f'values: {values}')
+    print(f'values: {values}')
 
     def decode_unicode(value):
         return value.encode('utf-8').decode('unicode_escape')
@@ -88,7 +89,7 @@ def process_message(message):
         'Clientes_SCR': decode_unicode(values[13])
     }
 
-    #print(f'data: {data}')
+    print(f'data: {data}')
     
     return data
 

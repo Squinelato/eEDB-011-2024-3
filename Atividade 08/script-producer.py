@@ -10,6 +10,9 @@ log_file_path = 'messages.log'
 producer = KafkaProducer(bootstrap_servers=kafka_server,
                          value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
+if os.path.exists(log_file_path):
+    os.remove(log_file_path)
+
 def send_messages_from_csv(directory):
     with open(log_file_path, 'a', encoding='ISO-8859-1') as log_file:
         for filename in os.listdir(directory):
@@ -18,7 +21,7 @@ def send_messages_from_csv(directory):
                     filepath = os.path.join(directory, filename)
                     with open(filepath, mode='r', encoding='ISO-8859-1', newline='') as csvfile:
                         print(filepath)
-                        reader = csv.reader(csvfile)
+                        reader = csv.reader(csvfile, delimiter=';')
                         next(reader)
                         for row in reader:
                             message = ';'.join(row)
