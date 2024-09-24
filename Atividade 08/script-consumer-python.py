@@ -42,6 +42,28 @@ consumer = KafkaConsumer(
     value_deserializer=lambda x: x.decode('ISO-8859-1')
 )
 
+header_columns = [
+    'Ano', 
+    'Trimestre', 
+    'Categoria', 
+    'Tipo', 
+    'CNPJ', 
+    'Instituicao', 
+    'Indice', 
+    'Reclamacoes_Procedentes', 
+    'Reclamacoes_Outras', 
+    'Reclamacoes_Nao_Reguladas', 
+    'Total_Reclamacoes', 
+    'Clientes_CCS_SCR', 
+    'Clientes_CCS', 
+    'Clientes_SCR',
+    'CNPJ',
+    'Segmento',
+    'Nome da Instituição'
+]
+
+pd.DataFrame(columns=header_columns).to_csv(csv_file_path, mode='w', sep=';', index=False, quotechar='"')
+
 def process_message(message):
     values = message.split(';')
     #print(f'values: {values}')
@@ -72,21 +94,25 @@ def process_message(message):
 
 messages_list = []
 
-for message in consumer:
-    csv_value = message.value[1:-1]
-    #print(f'csv_value: {csv_value}')
-    data_dict = process_message(csv_value)
-    messages_list.append(data_dict)
+while True:
+    messages = consumer.poll(timeout_ms=1000)
     
-    if len(messages_list) >= 100:
-        df_messages = pd.DataFrame(messages_list)
-        
-        df_enriched = pd.merge(df_messages, df_banks, left_on='CNPJ', right_on='cnpj', how='left')
+    if not messages:
+        break
 
-        print(df_enriched.head())
-        
-        df_enriched.to_csv(csv_file_path, mode='a', index=False, header=False)
-        
-        messages_list.clear()
+    for topic_partition, messages in messages.items():
+        for message in messages:
+            csv_value = message.value[1:-1]
+            data_dict = process_message(csv_value)
+            messages_list.append(data_dict)
+
+            if len(messages_list) >= 100:
+                df_messages = pd.DataFrame(messages_list)
+                
+                df_enriched = pd.merge(df_messages, df_banks, left_on='CNPJ', right_on='cnpj', how='left')
+                print(df_enriched.head())
+                
+                df_enriched.to_csv(csv_file_path, mode='a', sep=';', index=False, header=False, quotechar='"')
+                messages_list.clear()
 
 db_connection.close()
