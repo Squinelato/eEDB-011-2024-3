@@ -1,6 +1,6 @@
 C:\kafka_2.13-3.8.0\bin\windows> .\zookeeper-server-start.bat ..\..\config\zookeeper.properties
 C:\kafka_2.13-3.8.0\bin\windows> .\kafka-server-start.bat ..\..\config\server.properties
-C:\kafka_2.13-3.8.0\bin\windows> .\kafka-topics.bat --create --topic ingesion-topic --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+C:\kafka_2.13-3.8.0\bin\windows> .\kafka-topics.bat --create --topic ingestion-topic --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
 
 python script-producer.py
 python script-consumer.py
