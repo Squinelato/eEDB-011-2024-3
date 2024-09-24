@@ -16,7 +16,8 @@ topic = credentials['topic']
 spark = SparkSession.builder \
     .appName("KafkaConsumer") \
     .config("spark.sql.warehouse.dir", "file:///C:/temp") \
-    .config("spark.jars", "C:/Users/mdeso/Documents/mysql-connector-j-9.0.0/mysql-connector-j-9.0.0.jar") \
+    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.1") \
+    .config("spark.jars.packages", "mysql:mysql-connector-java:8.0.30") \
     .getOrCreate()
 
 schema = StructType([
